@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/moqdev/tinyapp/issues"
   },
-  "homepage": "https://github.com/moqdev/tinyapp#readme"
+  "homepage": "https://github.com/moqdev/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
