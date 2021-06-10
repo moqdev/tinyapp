@@ -1,10 +1,13 @@
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
-const bodyParser = require("body-parser");
 
+const bodyParser = require("body-parser");
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
+
 
 app.set("view engine", "ejs");
 
@@ -76,6 +79,12 @@ app.post("/urls", (req, res) => {
   
   res.redirect('/urls');
 });
+//Add a POST route that updates a URL resource;
+app.post('/urls/:shortURL/update', (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect(`/urls/${req.params.shortURL}`);
+});
+
 
 //POST route that removes a URL resource:
 app.post("/urls/:shortURL/delete", (req, res)=>{
@@ -84,7 +93,11 @@ app.post("/urls/:shortURL/delete", (req, res)=>{
   res.redirect("/urls");
 });
 
-
+app.post("/login", (req, res)=> {
+  const username = req.body.username;
+  res.cookie("username", username);
+  res.redirect("/urls");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
