@@ -23,10 +23,11 @@ const users = {
   },
   "user2": {
     id: "1234",
-    email: "user2@example.com",
+    email: "missmona@gmail.com",
     password: "password"
   }
 };
+
 
 
 function generateString(length) {
@@ -42,12 +43,21 @@ function generateString(length) {
 function findUserByEmail(email) {
   for (const userId in users) {
     let user = users[userId];
-    console.log(user);
+  
     if (user.email === email) {
       return user;
     }
   }
   
+}
+function findUserById(id) {
+  for (const userId in users) {
+    let user = users[userId];
+  
+    if (user.id === id) {
+      return user;
+    }
+  }
 }
 
 app.get("/", (req, res) => {
@@ -59,7 +69,12 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  if (res.cookie.user_id) {
+    res.render("urls_new");
+  } else {
+    res.redirect("");
+  }
+  
 });
 
 app.get("/urls/:shortURL", (req, res) => { //wildcard! -->  " : " and then name, integer, whatever is a wildcard beware.
@@ -73,7 +88,9 @@ app.get("/hello", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.user_id };
+  
+  const user = findUserById(req.cookies.user_id);
+  const templateVars = { urls: urlDatabase, user};
   res.render("urls_index", templateVars);
 });
 
@@ -116,19 +133,32 @@ app.post("/urls/:shortURL/delete", (req, res)=>{
   res.redirect("/urls");
 });
 app.get("/login", (req, res) => {
-  const templateVars = {username: users[req.cookies.user_id]};
-  res.render("urls_login", templateVars);
+  const templateVars = {userId: users[req.cookies.user_id]};
+  res.render("login", templateVars);
 });
 
 app.post("/login", (req, res)=> {
-  const username = req.body.username;
-  res.cookie("username", username);
-  res.redirect("/urls");
+  const {email,password} = req.body;
+  const user = findUserByEmail(email);
+  if (!user) {
+    res.status(403).send("Invalid email");
+  }
+  if (user.password === password) {
+    const templateVars = {
+      email: user.email,
+      userId: user.id
+    };
+    res.cookie("user_id", user.id);
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("Invalid password");
+  }
+
 });
 
 //UserLogout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 //Registration form
@@ -136,7 +166,7 @@ app.get('/register', (req, res)=>{
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies.user_id //Modify the logout endpoint
+    userId: req.cookies.user_id //Modify the logout endpoint
   };
   res.render('registration', templateVars);
 });
@@ -144,6 +174,7 @@ app.get('/register', (req, res)=>{
 app.post('/register', (req, res)=>{
   const {email, password} = req.body;
   const id = generateString(4);
+
   const newUser = {id, email, password};
   if (email === "" || password === "") {
     res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
@@ -152,7 +183,7 @@ app.post('/register', (req, res)=>{
     res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
   }
   users.id = newUser;
-  res.cookie("username", id);
+  res.cookie("user_id", id);
   res.redirect('/urls');
 });
 
