@@ -60,7 +60,20 @@ function findUserById(id) {
     }
   }
 }
+//fiters current user's links and selects it from the URL database.
+function urlsForUser(id) {
+  let result = {};
+  for (const [key, value] of Object.entries(urlDatabase)) {
+    console.log(key, value, id);
+    if (value.userID == id) {
+      Object.assign(result, {[key]: value});
+    }
+    
+  }
 
+  
+  return result;
+}
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -91,8 +104,12 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   
   const user = findUserById(req.cookies.user_id);
-  const templateVars = { urls: urlDatabase, user};
-  res.render("urls_index", templateVars);
+  const userLinks = urlsForUser(req.cookies.user_id);
+  const templateVars = { urls:userLinks, user};
+
+  res.render("urls_index", user ? templateVars : null);
+  
+  
 });
 
 
@@ -113,9 +130,9 @@ app.post("/urls", (req, res) => {
   
   const newID = generateString(6);
   //urlDatabase[newID] = "http://gmail.com";
-  urlDatabase[newID] = req.body.longURL;
+  urlDatabase[newID] = {longURL: req.body.longURL, userID: req.cookies.user_id};
 
-  console.log(req.body); // { longURL: "www.reddit.com" }
+  console.log(urlDatabase);
   
   res.redirect('/urls');
 });
@@ -144,10 +161,7 @@ app.post("/login", (req, res)=> {
     res.status(403).send("Invalid email");
   }
   if (user.password === password) {
-    const templateVars = {
-      email: user.email,
-      userId: user.id
-    };
+    
     res.cookie("user_id", user.id);
     res.redirect("/urls");
   } else {
