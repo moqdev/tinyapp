@@ -128,7 +128,7 @@ app.post("/login", (req, res)=> {
 
 //UserLogout
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  res.clearCookie('username');
   res.redirect('/urls');
 });
 //Registration form
@@ -152,7 +152,7 @@ app.post('/register', (req, res)=>{
     res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
   }
   users.id = newUser;
-  res.cookie("user_id", id);
+  res.cookie("username", id);
   res.redirect('/urls');
 });
 
