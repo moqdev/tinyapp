@@ -15,6 +15,18 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
+const users = {
+  "user1": {
+    id: "123",
+    email: "user@example.com",
+    password: "password123"
+  },
+  "user2": {
+    id: "1234",
+    email: "user2@example.com",
+    password: "password"
+  }
+};
 
 
 function generateString(length) {
@@ -27,6 +39,16 @@ function generateString(length) {
   return result;
 }
 
+function findUserByEmail(email) {
+  for (const userId in users) {
+    let user = users[userId];
+    console.log(user);
+    if (user.email === email) {
+      return user;
+    }
+  }
+  
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -51,7 +73,7 @@ app.get("/hello", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.username };
+  const templateVars = { urls: urlDatabase, username: req.cookies.user_id };
   res.render("urls_index", templateVars);
 });
 
@@ -93,6 +115,10 @@ app.post("/urls/:shortURL/delete", (req, res)=>{
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
+app.get("/login", (req, res) => {
+  const templateVars = {username: users[req.cookies.user_id]};
+  res.render("urls_login", templateVars);
+});
 
 app.post("/login", (req, res)=> {
   const username = req.body.username;
@@ -102,7 +128,7 @@ app.post("/login", (req, res)=> {
 
 //UserLogout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 //Registration form
@@ -110,10 +136,26 @@ app.get('/register', (req, res)=>{
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies.username
+    username: req.cookies.user_id //Modify the logout endpoint
   };
   res.render('registration', templateVars);
 });
+
+app.post('/register', (req, res)=>{
+  const {email, password} = req.body;
+  const id = generateString(4);
+  const newUser = {id, email, password};
+  if (email === "" || password === "") {
+    res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
+  }
+  if (findUserByEmail(email)) {
+    res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
+  }
+  users.id = newUser;
+  res.cookie("user_id", id);
+  res.redirect('/urls');
+});
+
 
 
 app.listen(PORT, () => {
