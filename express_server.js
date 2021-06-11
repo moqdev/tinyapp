@@ -68,11 +68,12 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+//If someone is not logged in when trying to access /urls/new, redirect them to the login page.
 app.get("/urls/new", (req, res) => {
-  if (res.cookie.user_id) {
+  if (req.cookies.user_id) {
     res.render("urls_new");
   } else {
-    res.redirect("");
+    res.redirect("/login");
   }
   
 });
@@ -85,7 +86,6 @@ app.get("/urls/:shortURL", (req, res) => { //wildcard! -->  " : " and then name,
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
-
 
 app.get("/urls", (req, res) => {
   
