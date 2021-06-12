@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require('bcrypt');
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -64,7 +65,6 @@ function findUserById(id) {
 function urlsForUser(id) {
   let result = {};
   for (const [key, value] of Object.entries(urlDatabase)) {
-    console.log(key, value, id);
     if (value.userID == id) {
       Object.assign(result, {[key]: value});
     }
@@ -126,13 +126,13 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post("/urls", (req, res) => {
   // creates a new entry in the URL database
-  console.log(req.body.longURL); // www.reddit.com  // Log the POST request body to the console
+  // console.log(req.body.longURL); // www.reddit.com  // Log the POST request body to the console
   
   const newID = generateString(6);
   //urlDatabase[newID] = "http://gmail.com";
   urlDatabase[newID] = {longURL: req.body.longURL, userID: req.cookies.user_id};
 
-  console.log(urlDatabase);
+ 
   
   res.redirect('/urls');
 });
@@ -158,9 +158,10 @@ app.post("/login", (req, res)=> {
   const {email,password} = req.body;
   const user = findUserByEmail(email);
   if (!user) {
-    res.status(403).send("Invalid email");
+    return res.status(403).send("Invalid email");
   }
-  if (user.password === password) {
+  console.log(password, user.password, user);
+  if (bcrypt.compareSync(password, user.password)) { //compare the password from the client to the user's password.
     
     res.cookie("user_id", user.id);
     res.redirect("/urls");
@@ -187,9 +188,10 @@ app.get('/register', (req, res)=>{
 
 app.post('/register', (req, res)=>{
   const {email, password} = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10); //Hash the password with bcrypt
   const id = generateString(4);
 
-  const newUser = {id, email, password};
+  const newUser = {id, email,password:hashedPassword}; //create user with the hashed password
   if (email === "" || password === "") {
     res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
   }
