@@ -10,7 +10,6 @@
         <a class=" nav-item nav-link" href="/urls">My URLs</a>
         <a class=" nav-item nav-link" href="/urls/new">Create New URL</a>
         <% if (typeof user==='undefined' ) { %>
-          <a class=" nav-item nav-link" href="/register">Register</a>
           <% } %>
       </div>
 
@@ -23,9 +22,16 @@
           <button type="submit" class="btn btn-outline-danger my-2 my-sm-0">Logout</button>
         </form>
         <% } else { %>
-          <form class="form-inline my-2 my-lg-0 ml-auto" action="/login" method="GET">
+          <form class="form-inline m-1 ml-auto" action="/login" method="GET">
             <button type="submit" class="btn btn-primary">Login</button>
+
           </form>
+
+          <form class="form-inline m-1" action="/register" method="GET">
+            <button type="submit" class="btn btn-primary">Register</button>
+
+          </form>
+
           <% } %>
     </div>
   </nav>

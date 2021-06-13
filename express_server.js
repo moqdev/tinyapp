@@ -71,7 +71,6 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  
   const user = findUserById(req.session.user_id, users);
   const userLinks = urlsForUser(req.session.user_id, urlDatabase);
   const templateVars = { urls:userLinks, user};
@@ -92,11 +91,9 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// creates a new entry in the URL database
 app.post("/urls", (req, res) => {
-  // creates a new entry in the URL database
-    
   const newID = generateString(6);
-  //urlDatabase[newID] = "http://gmail.com";
   urlDatabase[newID] = {longURL: req.body.longURL, userID: req.session.user_id};
 
   res.redirect('/urls');
@@ -126,14 +123,14 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res)=> {
   const {email,password} = req.body;
   const user = findUserByEmail(email, users);
+
   if (!user) {
     return res.status(403).send("Invalid email");
   }
-  if (bcrypt.compareSync(password, user.password)) { //compare the password from the client to the user's password.
+  //compare the password from the client to the user's password.
+  if (bcrypt.compareSync(password, user.password)) {
     req.session.user_id = user.id;
-    
     res.redirect("/urls");
-
   } else {
     res.status(403).send("Invalid password");
   }
@@ -150,7 +147,7 @@ app.get('/register', (req, res)=>{
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    userId: req.session.user_id //Modify the logout endpoint
+    userId: req.session.user_id
   };
 
   res.render('registration', templateVars);
@@ -158,16 +155,17 @@ app.get('/register', (req, res)=>{
 
 app.post('/register', (req, res)=>{
   const {email, password} = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10); //Hash the password with bcrypt
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateString(4);
-  const newUser = {id, email,password:hashedPassword}; //create user with the hashed password
+  //create user with the hashed password
+  const newUser = {id, email,password:hashedPassword};
 
   if (email === "" || password === "") {
     res.status(400).send("Error occurred. Oops, don't sweat it, everyone has an off day. Please try again.");
   }
 
   if (findUserByEmail(email, users)) {
-    res.status(400).send("Error occurred. Oops, it's all good! Everybody has an off day. Please try again.");
+    res.status(400).send("Error occurred. Oops, it's all good! We all have an off day. Please try again.");
   }
   users.id = newUser;
   req.session.user_id = id;
