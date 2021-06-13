@@ -4,10 +4,9 @@ const cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080; // default port 8080
 const {findUserByEmail, findUserById, generateString, urlsForUser } =  require("./helpers");
-
-
 const bodyParser = require("body-parser");
-// app.use(cookieParser());
+
+
 app.use(bodyParser.urlencoded({extended: true}));
 //Set the cookies in a session on the client.
 app.use(cookieSession({
@@ -16,7 +15,6 @@ app.use(cookieSession({
 }));
 
 app.set("view engine", "ejs");
-//app.use(checkLogin);
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -60,11 +58,11 @@ app.get("/urls/new", checkLogin,(req, res) => {
   } else {
     res.redirect("/login");
   }
-  
 });
 
-app.get("/urls/:shortURL", (req, res) => { //wildcard! -->  " : " and then name, integer, whatever is a wildcard beware.
+app.get("/urls/:shortURL", (req, res) => { //wildcard! -->  " : " and then name, integer, etc., This is a wildcard beware.
   const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL};
+
   res.render("urls_show", templateVars);
 });
 
@@ -79,48 +77,49 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls:userLinks, user};
 
   res.render("urls_index", user ? templateVars : null);
-  
 });
 
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[this.shortURL] };
+
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  // console.log(req.params.shortURL);
+
   res.redirect(longURL);
 });
 
 app.post("/urls", (req, res) => {
   // creates a new entry in the URL database
-  // console.log(req.body.longURL); // www.reddit.com  // Log the POST request body to the console
-  
+    
   const newID = generateString(6);
   //urlDatabase[newID] = "http://gmail.com";
   urlDatabase[newID] = {longURL: req.body.longURL, userID: req.session.user_id};
 
- 
-  
   res.redirect('/urls');
 });
-//Add a POST route that updates a URL resource;
+
+//Add a POST route that updates a URL resource:
 app.post('/urls/:shortURL/update', (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.longURL;
+
   res.redirect(`/urls/${req.params.shortURL}`);
 });
-
 
 //POST route that removes a URL resource:
 app.post("/urls/:shortURL/delete", (req, res)=>{
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
+
   res.redirect("/urls");
 });
+
 app.get("/login", (req, res) => {
   const templateVars = {userId: users[req.session.user_id]};
+
   res.render("login", templateVars);
 });
 
@@ -130,15 +129,14 @@ app.post("/login", (req, res)=> {
   if (!user) {
     return res.status(403).send("Invalid email");
   }
-  // console.log(password, user.password, user);
   if (bcrypt.compareSync(password, user.password)) { //compare the password from the client to the user's password.
-    
     req.session.user_id = user.id;
+    
     res.redirect("/urls");
+
   } else {
     res.status(403).send("Invalid password");
   }
-
 });
 
 //UserLogout
@@ -146,6 +144,7 @@ app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
+
 //Registration form
 app.get('/register', (req, res)=>{
   const templateVars = {
@@ -153,6 +152,7 @@ app.get('/register', (req, res)=>{
     longURL: urlDatabase[req.params.shortURL],
     userId: req.session.user_id //Modify the logout endpoint
   };
+
   res.render('registration', templateVars);
 });
 
@@ -160,19 +160,19 @@ app.post('/register', (req, res)=>{
   const {email, password} = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10); //Hash the password with bcrypt
   const id = generateString(4);
-
   const newUser = {id, email,password:hashedPassword}; //create user with the hashed password
+
   if (email === "" || password === "") {
-    res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
+    res.status(400).send("Error occurred. Oops, don't sweat it, everyone has an off day. Please try again.");
   }
+
   if (findUserByEmail(email, users)) {
-    res.status(400).send("Error occurred. Oops, don't worry, everyone has an off day. Please try again.");
+    res.status(400).send("Error occurred. Oops, it's all good! Everybody has an off day. Please try again.");
   }
   users.id = newUser;
   req.session.user_id = id;
   res.redirect('/urls');
 });
-
 
 
 app.listen(PORT, () => {

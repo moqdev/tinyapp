@@ -23,10 +23,12 @@ describe('getUserByEmail', function() {
     const expectedOutput = "userRandomID";
     assert(expectedOutput === user.id, "correct id");
   });
+
   it('should return a user as undefined with an invalid email', function() {
     const user = findUserByEmail("userUnknown@example.com", testUsers);
     expect(user).to.be.undefined;
   });
+
 });
 
 describe('finduserById', function() {
@@ -34,4 +36,5 @@ describe('finduserById', function() {
     const user = findUserById("userRandomID", testUsers);
     expect(user['email']).to.equal("user@example.com");
   });
+  
 });

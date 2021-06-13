@@ -1,5 +1,5 @@
 <header>
-  <nav class="navbar navbar-expand-md navbar-dark bg-success">
+  <nav class="navbar justify-content-between navbar-expand-lg navbar-dark bg-success">
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -8,22 +8,25 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class=" nav-item nav-link" href="/urls">My URLs</a>
-        <a class=" text-warning nav-item nav-link" href="/urls/new">Create New URL</a>
+        <a class=" nav-item nav-link" href="/urls/new">Create New URL</a>
+        <% if (typeof user==='undefined' ) { %>
+          <a class=" nav-item nav-link" href="/register">Register</a>
+          <% } %>
       </div>
-    </div>
 
-    <% if (typeof user!=='undefined' && user) { %>
-      <form action="/logout" method="POST">
-        <span>Logged In As: <b>
-            <%= user.email %>
-          </b></span>
-        <button type="submit" class="btn btn-outline-danger">Logout</button>
-      </form>
-      <% } else { %>
-        <form action="/login" method="GET">
-          <button type="submit" class="btn btn-primary">Login</button>
+
+      <% if (typeof user!=='undefined' && user) { %>
+        <form class="form-inline my-2 my-lg-0 ml-auto" action="/logout" method="POST">
+          <span>Logged In As: <b>
+              <%= user.email %>
+            </b></span>
+          <button type="submit" class="btn btn-outline-danger my-2 my-sm-0">Logout</button>
         </form>
-        <% } %>
-
+        <% } else { %>
+          <form class="form-inline my-2 my-lg-0 ml-auto" action="/login" method="GET">
+            <button type="submit" class="btn btn-primary">Login</button>
+          </form>
+          <% } %>
+    </div>
   </nav>
 </header>
