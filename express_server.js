@@ -16,6 +16,7 @@ app.use(cookieSession({
 
 app.set("view engine", "ejs");
 
+//varibles
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -43,7 +44,7 @@ const checkLogin = function(req, res, next) {
 };
 
 // root
-// goes to /urls if logged in, otherwise redirects to /login
+// redirects to /urls if logged in, otherwise to /login
 app.get('/', (req, res) => {
   if (req.session.userID) {
     res.redirect('/urls');
@@ -52,17 +53,16 @@ app.get('/', (req, res) => {
   }
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+
 
 //If someone is not logged in when trying to access /urls/new, redirect them to the login page.
-app.get("/urls/new", checkLogin,(req, res) => {
+app.get("/urls/new", (req, res) => {
   
   if (req.session.user_id) {
-    res.render("urls_new",  req.templateVars);
+    const templateVars = {user: users[req.session.user_id]};
+    res.render('urls_new', templateVars);
   } else {
-    res.redirect("/login");
+    res.redirect('/login');
   }
 });
 
