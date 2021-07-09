@@ -36,8 +36,8 @@ const users = {
 };
 
 const checkLogin = function(req, res, next) {
-  const user = findUserById(req.session.user_id, users);
-  const userLinks = urlsForUser(req.session.user_id, urlDatabase);
+  const user = findUserById(req.session.userID, users);
+  const userLinks = urlsForUser(req.session.userID, urlDatabase);
   const templateVars = { urls:userLinks, user};
   req.templateVars = templateVars;
   next();
@@ -58,27 +58,25 @@ app.get('/', (req, res) => {
 //If someone is not logged in when trying to access /urls/new, redirect them to the login page.
 app.get("/urls/new", (req, res) => {
   
-  if (req.session.user_id) {
-    const templateVars = {user: users[req.session.user_id]};
+  if (req.session.userID) {
+    const templateVars = {user: users[req.session.userID]};
     res.render('urls_new', templateVars);
   } else {
     res.redirect('/login');
   }
 });
 
-app.get("/urls/:shortURL", (req, res) => { //wildcard! -->  " : " and then name, integer, etc., This is a wildcard beware.
+//short url page
+app.get("/urls/:shortURL", (req, res) => { //wildcard*
   const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL};
 
   res.render("urls_show", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 app.get("/urls", (req, res) => {
-  const user = findUserById(req.session.user_id, users);
-  const userLinks = urlsForUser(req.session.user_id, urlDatabase);
+  const user = findUserById(req.session.userID, users);
+  const userLinks = urlsForUser(req.session.userID, urlDatabase);
   const templateVars = { urls:userLinks, user};
 
   res.render("urls_index", user ? templateVars : null);
@@ -101,15 +99,15 @@ app.get("/u/:shortURL", (req, res) => {
 // creates a new entry in the URL database
 //redirects to short url
 app.post("/urls", (req, res) => {
-  console.log(req.session.user_id);
-  if (!req.session.user_id) {
+  console.log(req.session.userID);
+  if (!req.session.userID) {
     res.redirect('/login');
     
   } else {
     const newID = generateString(6);
     urlDatabase[newID] = {
       longURL: req.body.longURL,
-      userID: req.session.user_id};
+      userID: req.session.userID};
     res.redirect('/urls');
   }
 });
@@ -129,7 +127,7 @@ app.post('/urls/:shortURL/', (req, res) => {
 
 //POST route that removes a URL resource:
 app.post("/urls/:shortURL/delete", (req, res)=>{
-  if (!req.session.user_id) {
+  if (!req.session.userID) {
     res.redirect('/login');
   } else {
     const shortURL = req.params.shortURL;
@@ -139,7 +137,7 @@ app.post("/urls/:shortURL/delete", (req, res)=>{
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = {userId: users[req.session.user_id]};
+  const templateVars = {userId: users[req.session.userID]};
 
   res.render("login", templateVars);
 });
@@ -153,7 +151,7 @@ app.post("/login", (req, res)=> {
   }
   //compare the password from the client to the user's password.
   if (bcrypt.compareSync(password, user.password)) {
-    req.session.user_id = user.id;
+    req.session.userID = user.id;
     res.redirect("/urls");
   } else {
     res.status(403).send("Invalid password");
@@ -171,7 +169,7 @@ app.get('/register', (req, res)=>{
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    userId: req.session.user_id
+    userId: req.session.userID
   };
 
   res.render('registration', templateVars);
@@ -185,14 +183,14 @@ app.post('/register', (req, res)=>{
   const newUser = {id, email,password:hashedPassword};
 
   if (email === "" || password === "") {
-    res.status(400).send("Error occurred. Oops, don't sweat it, everyone has an off day. Please try again.");
+    res.status(400).send("Please provide a valid email and password. Both fields must be filled out.");
   }
 
   if (findUserByEmail(email, users)) {
-    res.status(400).send("Error occurred. Oops, it's all good! We all have an off day. Please try again.");
+    res.status(400).send("Email has already been registered.");
   }
   users.id = newUser;
-  req.session.user_id = id;
+  req.session.userID = id;
   res.redirect('/urls');
 });
 
