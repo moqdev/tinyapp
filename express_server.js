@@ -83,12 +83,12 @@ app.get("/urls", (req, res) => {
 });
 
 
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL,
-    longURL: urlDatabase[this.shortURL] };
+// app.get("/urls/:shortURL", (req, res) => {
+//   const templateVars = { shortURL: req.params.shortURL,
+//     longURL: urlDatabase[this.shortURL] };
 
-  res.render("urls_show", templateVars);
-});
+//   res.render("urls_show", templateVars);
+// });
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -113,11 +113,13 @@ app.post("/urls", (req, res) => {
 });
 
 //Add a POST route that updates a URL resource:
-app.post('/urls/:shortURL/', (req, res) => {
+app.post('/urls/:shortURL/update', (req, res) => {
+  console.log(req.params);
+  console.log(req.body);
   const shortURL = req.params.shortURL;
 
   if (req.session.userID  && req.session.userID === urlDatabase[shortURL].userID) {
-    urlDatabase[shortURL].longURL = req.body.updatedURL;
+    urlDatabase[shortURL].longURL = req.body.longURL;
     res.redirect(`/urls`);
   } else {
     const errorMessage = 'You are not authorized to do that.';
