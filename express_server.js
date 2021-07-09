@@ -42,8 +42,14 @@ const checkLogin = function(req, res, next) {
   next();
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+// root
+// goes to /urls if logged in, otherwise redirects to /login
+app.get('/', (req, res) => {
+  if (req.session.userID) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -95,8 +101,10 @@ app.get("/u/:shortURL", (req, res) => {
 // creates a new entry in the URL database
 //redirects to short url
 app.post("/urls", (req, res) => {
-  if (!req.session.userId) {
+  console.log(req.session.user_id);
+  if (!req.session.user_id) {
     res.redirect('/login');
+    
   } else {
     const newID = generateString(6);
     urlDatabase[newID] = {
@@ -107,18 +115,21 @@ app.post("/urls", (req, res) => {
 });
 
 //Add a POST route that updates a URL resource:
-app.post('/urls/:shortURL/update', (req, res) => {
-  if (!req.session.userId) {
-    res.redirect('/login');
+app.post('/urls/:shortURL/', (req, res) => {
+  const shortURL = req.params.shortURL;
+
+  if (req.session.userID  && req.session.userID === urlDatabase[shortURL].userID) {
+    urlDatabase[shortURL].longURL = req.body.updatedURL;
+    res.redirect(`/urls`);
   } else {
-    urlDatabase[req.params.shortURL] = req.body.longURL;
-    res.redirect(`/urls/${req.params.shortURL}`);
+    const errorMessage = 'You are not authorized to do that.';
+    res.status(401).render('urls_error', {user: users[req.session.userID], errorMessage});
   }
 });
 
 //POST route that removes a URL resource:
 app.post("/urls/:shortURL/delete", (req, res)=>{
-  if (!req.session.userId) {
+  if (!req.session.user_id) {
     res.redirect('/login');
   } else {
     const shortURL = req.params.shortURL;
