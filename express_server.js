@@ -80,7 +80,8 @@ app.get("/urls", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[this.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL,
+    longURL: urlDatabase[this.shortURL] };
 
   res.render("urls_show", templateVars);
 });
@@ -92,26 +93,38 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 // creates a new entry in the URL database
+//redirects to short url
 app.post("/urls", (req, res) => {
-  const newID = generateString(6);
-  urlDatabase[newID] = {longURL: req.body.longURL, userID: req.session.user_id};
-
-  res.redirect('/urls');
+  if (!req.session.userId) {
+    res.redirect('/login');
+  } else {
+    const newID = generateString(6);
+    urlDatabase[newID] = {
+      longURL: req.body.longURL,
+      userID: req.session.user_id};
+    res.redirect('/urls');
+  }
 });
 
 //Add a POST route that updates a URL resource:
 app.post('/urls/:shortURL/update', (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
-
-  res.redirect(`/urls/${req.params.shortURL}`);
+  if (!req.session.userId) {
+    res.redirect('/login');
+  } else {
+    urlDatabase[req.params.shortURL] = req.body.longURL;
+    res.redirect(`/urls/${req.params.shortURL}`);
+  }
 });
 
 //POST route that removes a URL resource:
 app.post("/urls/:shortURL/delete", (req, res)=>{
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-
-  res.redirect("/urls");
+  if (!req.session.userId) {
+    res.redirect('/login');
+  } else {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  }
 });
 
 app.get("/login", (req, res) => {
