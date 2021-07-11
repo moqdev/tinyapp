@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080; // default port 8080
-const {findUserByEmail, findUserById, generateString, urlsForUser } =  require("./helpers");
+const {findUserByEmail, findUserById, generateString, urlsForUser, auth } =  require("./helpers");
 const bodyParser = require("body-parser");
 
 
@@ -35,14 +35,6 @@ const users = {
   }
 };
 
-const checkLogin = function(req, res, next) {
-  const user = findUserById(req.session.userID, users);
-  const userLinks = urlsForUser(req.session.userID, urlDatabase);
-  const templateVars = { urls:userLinks, user};
-  req.templateVars = templateVars;
-  next();
-};
-
 // root
 // redirects to /urls if logged in, otherwise to /login
 app.get('/', (req, res) => {
@@ -56,19 +48,20 @@ app.get('/', (req, res) => {
 
 
 //If someone is not logged in when trying to access /urls/new, redirect them to the login page.
-app.get("/urls/new", (req, res) => {
+app.get("/urls/new", auth, (req, res) => {
   
-  if (req.session.userID) {
-    const templateVars = {user: users[req.session.userID]};
-    res.render('urls_new', templateVars);
-  } else {
-    res.redirect('/login');
-  }
+
+  const templateVars = {user: users[req.session.userID]};
+  res.render('urls_new', templateVars);
+ 
 });
 
 //short url page
-app.get("/urls/:shortURL", (req, res) => { //wildcard*
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL};
+app.get("/urls/:shortURL", auth, (req, res) => { //wildcard*
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL;
+  const templateVars = { shortURL, longURL};
+  
 
   res.render("urls_show", templateVars);
 });
@@ -83,12 +76,6 @@ app.get("/urls", (req, res) => {
 });
 
 
-// app.get("/urls/:shortURL", (req, res) => {
-//   const templateVars = { shortURL: req.params.shortURL,
-//     longURL: urlDatabase[this.shortURL] };
-
-//   res.render("urls_show", templateVars);
-// });
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -98,24 +85,20 @@ app.get("/u/:shortURL", (req, res) => {
 
 // creates a new entry in the URL database
 //redirects to short url
-app.post("/urls", (req, res) => {
-  console.log(req.session.userID);
-  if (!req.session.userID) {
-    res.redirect('/login');
-    
-  } else {
-    const newID = generateString(6);
-    urlDatabase[newID] = {
-      longURL: req.body.longURL,
-      userID: req.session.userID};
-    res.redirect('/urls');
-  }
+app.post("/urls", auth, (req, res) => {
+  
+  
+  const newID = generateString(6);
+  urlDatabase[newID] = {
+    longURL: req.body.longURL,
+    userID: req.session.userID};
+  res.redirect('/urls');
+  
 });
 
 //Add a POST route that updates a URL resource:
-app.post('/urls/:shortURL/update', (req, res) => {
-  console.log(req.params);
-  console.log(req.body);
+app.post('/urls/:shortURL/update', auth, (req, res) => {
+ 
   const shortURL = req.params.shortURL;
 
   if (req.session.userID  && req.session.userID === urlDatabase[shortURL].userID) {
@@ -128,13 +111,13 @@ app.post('/urls/:shortURL/update', (req, res) => {
 });
 
 //POST route that removes a URL resource:
-app.post("/urls/:shortURL/delete", (req, res)=>{
-  if (!req.session.userID) {
-    res.redirect('/login');
-  } else {
-    const shortURL = req.params.shortURL;
+app.post("/urls/:shortURL/delete", auth, (req, res)=>{
+  const shortURL = req.params.shortURL;
+  if (req.session.userID  && req.session.userID === urlDatabase[shortURL].userID) {
     delete urlDatabase[shortURL];
-    res.redirect("/urls");
+    res.redirect(`/urls`);
+  } else if (req.session.userID) {
+    res.redirect(`/urls`);
   }
 });
 
@@ -163,7 +146,7 @@ app.post("/login", (req, res)=> {
 //UserLogout
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect('/urls');
+  res.redirect('/');
 });
 
 //Registration form
@@ -187,7 +170,6 @@ app.post('/register', (req, res)=>{
   if (email === "" || password === "") {
     res.status(400).send("Please provide a valid email and password. Both fields must be filled out.");
   }
-
   if (findUserByEmail(email, users)) {
     res.status(400).send("Email has already been registered.");
   }
@@ -197,6 +179,4 @@ app.post('/register', (req, res)=>{
 });
 
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+app.listen(PORT);

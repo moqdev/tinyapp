@@ -6,11 +6,12 @@ const findUserByEmail = (email, db) => {
       return user;
     }
   }
+  return false;
 };
 
 const generateString = (length) => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = " ";
+  let result = "";
   const charactersLength = characters.length;
   
   for (let i = 0; i < length; i++) {
@@ -27,6 +28,7 @@ const findUserById = (id, db)=> {
       return user;
     }
   }
+  return false;
 };
 
 //fiters current user's links and selects it from the URL database.
@@ -41,6 +43,14 @@ const urlsForUser = (id, db) =>{
   return result;
 };
 
+//authentication middleware
+const auth = (req, res, next) => {
+  if (!req.session.userID) {
+    return res.redirect('/login');
+  }
+  next();
+};
 
 
-module.exports = {findUserByEmail, generateString, findUserById, urlsForUser};
+
+module.exports = {auth, findUserByEmail, generateString, findUserById, urlsForUser};
