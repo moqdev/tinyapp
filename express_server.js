@@ -50,20 +50,25 @@ app.get('/', (req, res) => {
 //If someone is not logged in when trying to access /urls/new, redirect them to the login page.
 app.get("/urls/new", auth, (req, res) => {
   
-
-  const templateVars = {user: users[req.session.userID]};
-  res.render('urls_new', templateVars);
+  const user = findUserById(req.session.userID, users);
+  res.render("urls_new", {user});
  
 });
 
 //short url page
 app.get("/urls/:shortURL", auth, (req, res) => { //wildcard*
+  const user = findUserById(req.session.userID, users);
+  const userID = req.session.userID;
   const shortURL = req.params.shortURL;
+  const urlUserID = urlDatabase[shortURL].userID;
+  if (userID !== urlUserID) {
+    return res.status(401).redirect("/urls");
+  }
   const longURL = urlDatabase[shortURL].longURL;
   const templateVars = { shortURL, longURL};
   
 
-  res.render("urls_show", templateVars);
+  res.render("urls_show", {...templateVars, user });
 });
 
 
@@ -77,11 +82,20 @@ app.get("/urls", (req, res) => {
 
 
 
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-
-  res.redirect(longURL);
+app.get('/u/:shortURL', (req, res) => {
+  if (urlDatabase[req.params.shortURL]) {
+    let longURL = urlDatabase[req.params.shortURL].longURL;
+    if (!longURL.includes('https://')) {
+      longURL = 'https://' + longURL;
+    }
+   
+    res.status(302).redirect(longURL);
+  } else {
+    const errorMessage = 'This short URL does not exist.';
+    res.status(404).send(errorMessage);
+  }
 });
+
 
 // creates a new entry in the URL database
 //redirects to short url
